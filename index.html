@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LB JurisFlow — Law Firm Revenue Leak Calculator</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --navy: #0d1117;
+    --navy-2: #161b22;
+    --navy-3: #1c2128;
+    --gold: #c9a84c;
+    --gold-light: #e0bc60;
+    --red: #ff6b6b;
+    --green: #69db7c;
+    --white: #f0ece3;
+    --muted: rgba(240,236,227,0.5);
+    --border: rgba(201,168,76,0.2);
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--navy);
+    color: var(--white);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* HERO */
+  .hero {
+    text-align: center;
+    padding: 80px 24px 60px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -120px; left: 50%;
+    transform: translateX(-50%);
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(201,168,76,0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .brand {
+    font-family: 'Playfair Display', serif;
+    font-size: 13px;
+    font-weight: 400;
+    letter-spacing: 0.3em;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 24px;
+  }
+  .hero h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(32px, 6vw, 62px);
+    font-weight: 700;
+    line-height: 1.1;
+    margin-bottom: 20px;
+    max-width: 760px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .hero h1 span { color: var(--gold); }
+  .hero p {
+    font-size: 17px;
+    color: var(--muted);
+    max-width: 520px;
+    margin: 0 auto 40px;
+    line-height: 1.7;
+  }
+  .scroll-hint {
+    font-size: 12px;
+    letter-spacing: 0.15em;
+    color: var(--gold);
+    text-transform: uppercase;
+    opacity: 0.7;
+  }
+
+  /* DIVIDER */
+  .divider {
+    width: 60px; height: 1px;
+    background: var(--gold);
+    margin: 0 auto 60px;
+    opacity: 0.4;
+  }
+
+  /* MAIN CONTAINER */
+  .container {
+    max-width: 740px;
+    margin: 0 auto;
+    padding: 0 24px 100px;
+  }
+
+  /* TABS */
+  .tabs {
+    display: flex;
+    gap: 2px;
+    background: var(--navy-2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 4px;
+    margin-bottom: 36px;
+  }
+  .tab {
+    flex: 1;
+    padding: 12px 16px;
+    border-radius: 9px;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    letter-spacing: 0.02em;
+    transition: all 0.2s;
+    text-align: center;
+  }
+  .tab.active {
+    background: var(--navy-3);
+    color: var(--gold);
+    border: 1px solid var(--border);
+  }
+
+  /* PANEL */
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* SECTION LABEL */
+  .section-label {
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--gold);
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    margin: 28px 0 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* FIELDS */
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+  .field label {
+    font-size: 12px;
+    color: var(--muted);
+    display: block;
+    margin-bottom: 6px;
+    letter-spacing: 0.02em;
+  }
+  .field input {
+    width: 100%;
+    padding: 10px 14px;
+    background: var(--navy-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--white);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 400;
+    transition: border-color 0.2s;
+    -moz-appearance: textfield;
+  }
+  .field input::-webkit-outer-spin-button,
+  .field input::-webkit-inner-spin-button { -webkit-appearance: none; }
+  .field input:focus { outline: none; border-color: var(--gold); }
+
+  /* RESULT BOX */
+  .result-box {
+    background: var(--navy-2);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px;
+    margin-top: 28px;
+    position: relative;
+    overflow: hidden;
+  }
+  .result-box::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  }
+  .result-header {
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--gold);
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    margin-bottom: 10px;
+  }
+  .result-main {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(40px, 10vw, 64px);
+    font-weight: 700;
+    color: var(--red);
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+  .result-main.green { color: var(--green); }
+  .result-sub {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 24px;
+  }
+
+  /* BREAKDOWN GRID */
+  .result-breakdown {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    border-top: 1px solid var(--border);
+    padding-top: 20px;
+    margin-bottom: 24px;
+  }
+  .rb-label { font-size: 11px; color: var(--muted); margin-bottom: 4px; letter-spacing: 0.05em; }
+  .rb-value { font-size: 18px; font-weight: 500; color: var(--white); }
+  .rb-value.warn { color: var(--red); }
+  .rb-value.good { color: var(--green); }
+
+  /* PAYBACK BAR */
+  .payback-bar { margin-bottom: 24px; }
+  .pb-label { font-size: 11px; color: var(--muted); margin-bottom: 8px; }
+  .pb-track { height: 4px; background: rgba(255,255,255,0.08); border-radius: 2px; overflow: hidden; }
+  .pb-fill { height: 100%; background: var(--green); border-radius: 2px; transition: width 0.5s ease; }
+
+  /* CTA BUTTONS */
+  .cta { display: flex; gap: 10px; flex-wrap: wrap; }
+  .btn {
+    padding: 12px 22px;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s;
+    letter-spacing: 0.02em;
+    border: none;
+  }
+  .btn-gold {
+    background: var(--gold);
+    color: var(--navy);
+  }
+  .btn-gold:hover { background: var(--gold-light); transform: translateY(-1px); }
+  .btn-ghost {
+    background: transparent;
+    color: var(--white);
+    border: 1px solid var(--border);
+  }
+  .btn-ghost:hover { border-color: var(--gold); color: var(--gold); }
+
+  /* FOOTER */
+  footer {
+    text-align: center;
+    padding: 40px 24px;
+    border-top: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 12px;
+    letter-spacing: 0.05em;
+  }
+  footer a { color: var(--gold); text-decoration: none; }
+
+  @media (max-width: 520px) {
+    .row { grid-template-columns: 1fr; }
+    .result-breakdown { grid-template-columns: 1fr 1fr; }
+    .hero { padding: 60px 20px 40px; }
+    .tabs { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<section class="hero">
+  <div class="brand">LB JurisFlow Advisory</div>
+  <h1>Your firm is bleeding.<br><span>Find out exactly how much.</span></h1>
+  <p>Two tools. 60 seconds. The real cost of running your practice on manual systems — and the ROI of going Sovereign.</p>
+  <div class="scroll-hint">↓ Run your audit below</div>
+</section>
+
+<div class="divider"></div>
+
+<div class="container">
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('pain')">① Revenue leak audit</button>
+    <button class="tab" onclick="switchTab('roi')">② Sovereign ROI projection</button>
+  </div>
+
+  <!-- PAIN PANEL -->
+  <div class="panel active" id="panel-pain">
+
+    <div class="section-label">Intake leak</div>
+    <div class="row">
+      <div class="field"><label>Monthly inbound leads</label><input type="number" id="p-leads" value="40" oninput="calcPain()"></div>
+      <div class="field"><label>Avg case settlement value ($)</label><input type="number" id="p-case-value" value="350000" oninput="calcPain()"></div>
+    </div>
+    <div class="row">
+      <div class="field"><label>Leads lost to slow response (%)</label><input type="number" id="p-loss-pct" value="15" oninput="calcPain()"></div>
+      <div class="field"><label>Firm's contingency fee (%)</label><input type="number" id="p-fee-pct" value="33" oninput="calcPain()"></div>
+    </div>
+
+    <div class="section-label">Medical indexing tax</div>
+    <div class="row">
+      <div class="field"><label>Staff doing manual indexing</label><input type="number" id="p-staff" value="5" oninput="calcPain()"></div>
+      <div class="field"><label>Hours / week per person</label><input type="number" id="p-hrs" value="10" oninput="calcPain()"></div>
+    </div>
+    <div class="row">
+      <div class="field"><label>Staff utility rate ($/hr)</label><input type="number" id="p-rate" value="300" oninput="calcPain()"></div>
+    </div>
+
+    <div class="result-box">
+      <div class="result-header">Total monthly revenue leak</div>
+      <div class="result-main" id="pain-total">$0</div>
+      <div class="result-sub" id="pain-annual">Calculating your annual bleed…</div>
+      <div class="result-breakdown">
+        <div><div class="rb-label">Missed case revenue</div><div class="rb-value warn" id="pain-intake">$0/mo</div></div>
+        <div><div class="rb-label">Indexing time wasted</div><div class="rb-value warn" id="pain-index">$0/mo</div></div>
+      </div>
+      <div class="cta">
+        <a href="https://cal.com/umar-iqbal-vrn0dv/30min?overlayCalendar=true" target="_blank" class="btn btn-gold">Book a sovereign audit call ↗</a>
+        <button class="btn btn-ghost" onclick="switchTab('roi')">See the fix →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ROI PANEL -->
+  <div class="panel" id="panel-roi">
+
+    <div class="section-label">Your current leak</div>
+    <div class="row">
+      <div class="field"><label>Monthly revenue leak ($)</label><input type="number" id="r-leak" value="84000" oninput="calcROI()"></div>
+      <div class="field"><label>% recovered by Sovereign AI</label><input type="number" id="r-recovery-pct" value="75" oninput="calcROI()"></div>
+    </div>
+
+    <div class="section-label">Staff multiplier</div>
+    <div class="row">
+      <div class="field"><label>Extra litigation hours/month gained</label><input type="number" id="r-extra-hrs" value="200" oninput="calcROI()"></div>
+      <div class="field"><label>Value per recovered hour ($)</label><input type="number" id="r-hr-value" value="300" oninput="calcROI()"></div>
+    </div>
+
+    <div class="section-label">Investment</div>
+    <div class="row">
+      <div class="field"><label>Setup fee ($)</label><input type="number" id="r-setup" value="15000" oninput="calcROI()"></div>
+      <div class="field"><label>Monthly retainer ($)</label><input type="number" id="r-monthly" value="8500" oninput="calcROI()"></div>
+    </div>
+
+    <div class="result-box">
+      <div class="result-header">Year 1 net gain</div>
+      <div class="result-main green" id="roi-total">$0</div>
+      <div class="result-sub" id="roi-sub">System pays for itself in — days</div>
+      <div class="result-breakdown">
+        <div><div class="rb-label">Recovered leak (yr 1)</div><div class="rb-value good" id="roi-recovered">$0</div></div>
+        <div><div class="rb-label">Staff multiplier (yr 1)</div><div class="rb-value good" id="roi-staff">$0</div></div>
+        <div style="margin-top:4px"><div class="rb-label">Total year 1 investment</div><div class="rb-value warn" id="roi-cost">$0</div></div>
+        <div style="margin-top:4px"><div class="rb-label">ROI multiple</div><div class="rb-value good" id="roi-multiple">0x</div></div>
+      </div>
+      <div class="payback-bar">
+        <div class="pb-label" id="pb-label">Payback period: calculating…</div>
+        <div class="pb-track"><div class="pb-fill" id="pb-fill" style="width:0%"></div></div>
+      </div>
+      <div class="cta">
+        <a href="https://cal.com/umar-iqbal-vrn0dv/30min?overlayCalendar=true" target="_blank" class="btn btn-gold">Book a sovereign audit call ↗</a>
+        <button class="btn btn-ghost" onclick="switchTab('pain')">← Recalculate leak</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  <p style="margin-bottom:8px; font-family: 'Playfair Display', serif; font-size:15px; color: var(--white);">LB JurisFlow Advisory</p>
+  <p>Sovereign Infrastructure for Medical Malpractice Firms &nbsp;·&nbsp; <a href="https://cal.com/umar-iqbal-vrn0dv/30min?overlayCalendar=true" target="_blank">Book a call</a></p>
+</footer>
+
+<script>
+function fmt(n) {
+  if (n >= 1000000) return '$' + (n / 1000000).toFixed(2) + 'M';
+  if (n >= 1000) return '$' + Math.round(n / 1000) + 'k';
+  return '$' + Math.round(n).toLocaleString();
+}
+
+function calcPain() {
+  const leads = +document.getElementById('p-leads').value || 0;
+  const caseVal = +document.getElementById('p-case-value').value || 0;
+  const lossPct = (+document.getElementById('p-loss-pct').value || 0) / 100;
+  const feePct = (+document.getElementById('p-fee-pct').value || 0) / 100;
+  const staff = +document.getElementById('p-staff').value || 0;
+  const hrs = +document.getElementById('p-hrs').value || 0;
+  const rate = +document.getElementById('p-rate').value || 0;
+
+  const intakeLeak = leads * lossPct * caseVal * feePct;
+  const indexLeak = staff * hrs * 4.33 * rate;
+  const total = intakeLeak + indexLeak;
+
+  document.getElementById('pain-total').textContent = fmt(total);
+  document.getElementById('pain-annual').textContent = fmt(total * 12) + ' bleeding out every year unnoticed';
+  document.getElementById('pain-intake').textContent = fmt(intakeLeak) + '/mo';
+  document.getElementById('pain-index').textContent = fmt(indexLeak) + '/mo';
+}
+
+function calcROI() {
+  const leak = +document.getElementById('r-leak').value || 0;
+  const recPct = (+document.getElementById('r-recovery-pct').value || 0) / 100;
+  const extraHrs = +document.getElementById('r-extra-hrs').value || 0;
+  const hrVal = +document.getElementById('r-hr-value').value || 0;
+  const setup = +document.getElementById('r-setup').value || 0;
+  const monthly = +document.getElementById('r-monthly').value || 0;
+
+  const recoveredMonthly = leak * recPct;
+  const staffMonthly = extraHrs * hrVal;
+  const totalGainYear = (recoveredMonthly + staffMonthly) * 12;
+  const totalCostYear = setup + (monthly * 12);
+  const netGain = totalGainYear - totalCostYear;
+  const multiple = totalCostYear > 0 ? (totalGainYear / totalCostYear).toFixed(1) : '0';
+  const dailyGain = totalGainYear / 365;
+  const paybackDays = dailyGain > 0 ? Math.round(totalCostYear / dailyGain) : 0;
+  const pbPct = Math.min(100, Math.max(2, 100 - (paybackDays / 180 * 100)));
+
+  document.getElementById('roi-total').textContent = fmt(netGain);
+  document.getElementById('roi-sub').textContent = 'System pays for itself in ' + paybackDays + ' days';
+  document.getElementById('roi-recovered').textContent = fmt(recoveredMonthly * 12);
+  document.getElementById('roi-staff').textContent = fmt(staffMonthly * 12);
+  document.getElementById('roi-cost').textContent = fmt(totalCostYear);
+  document.getElementById('roi-multiple').textContent = multiple + 'x';
+  document.getElementById('pb-label').textContent = 'Payback period: ' + paybackDays + ' days';
+  document.getElementById('pb-fill').style.width = pbPct + '%';
+}
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach((t, i) => {
+    t.classList.toggle('active', (i === 0 && tab === 'pain') || (i === 1 && tab === 'roi'));
+  });
+  document.getElementById('panel-pain').classList.toggle('active', tab === 'pain');
+  document.getElementById('panel-roi').classList.toggle('active', tab === 'roi');
+  if (tab === 'roi') {
+    const leakVal = document.getElementById('pain-total').textContent;
+    const raw = leakVal.replace(/[$Mk,]/g, '');
+    let num = parseFloat(raw);
+    if (leakVal.includes('M')) num = num * 1000000;
+    else if (leakVal.includes('k')) num = num * 1000;
+    if (num > 0) document.getElementById('r-leak').value = Math.round(num);
+    calcROI();
+  }
+}
+
+calcPain();
+calcROI();
+</script>
+</body>
+</html>
